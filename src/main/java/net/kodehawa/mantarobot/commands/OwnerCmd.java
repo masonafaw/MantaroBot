@@ -23,7 +23,6 @@ import net.kodehawa.mantarobot.MantaroBot;
 import net.kodehawa.mantarobot.commands.currency.item.ItemHelper;
 import net.kodehawa.mantarobot.commands.currency.item.ItemStack;
 import net.kodehawa.mantarobot.commands.currency.profile.Badge;
-import net.kodehawa.mantarobot.commands.currency.seasons.Season;
 import net.kodehawa.mantarobot.core.CommandRegistry;
 import net.kodehawa.mantarobot.core.command.NewCommand;
 import net.kodehawa.mantarobot.core.command.NewContext;
@@ -49,7 +48,7 @@ import net.kodehawa.mantarobot.utils.data.JsonDataManager;
 import net.kodehawa.mantarobot.utils.eval.JavaEvaluator;
 import net.kodehawa.mantarobot.utils.eval.MavenDependencies;
 
-import java.awt.Color;
+import java.awt.*;
 import java.lang.reflect.InvocationTargetException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
@@ -122,14 +121,12 @@ public class OwnerCmd {
 
             var player = db.getPlayer(user);
             var dbUser = db.getUser(user);
-            var seasonalPlayerData = db.getPlayerForSeason(user, Season.SECOND);
 
             try {
                 var jsonPlayer = JsonDataManager.toJson(player);
                 var jsonUser = JsonDataManager.toJson(dbUser);
-                var jsonSeason = JsonDataManager.toJson(seasonalPlayerData);
 
-                var total = "Player:\n%s\n ---- \nUser:\n%s\n ---- \nSeason:\n%s".formatted(jsonPlayer, jsonUser, jsonSeason);
+                var total = "Player:\n%s\n ---- \nUser:\n%s".formatted(jsonPlayer, jsonUser);
                 byte[] bytes = total.getBytes(StandardCharsets.UTF_8);
 
                 if (bytes.length > 7_800_000) {

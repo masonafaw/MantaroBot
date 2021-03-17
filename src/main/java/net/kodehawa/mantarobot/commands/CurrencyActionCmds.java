@@ -72,23 +72,16 @@ public class CurrencyActionCmds {
 
             @Override
             protected void call(Context ctx, String content, String[] args) {
-                final var isSeasonal = ctx.isSeasonal();
                 final var languageContext = ctx.getLanguageContext();
 
                 final var player = ctx.getPlayer();
                 final var playerData = player.getData();
-                final var seasonalPlayer = ctx.getSeasonPlayer();
-                final var seasonalPlayerData = seasonalPlayer.getData();
-
                 final var dbUser = ctx.getDBUser();
                 final var userData = dbUser.getData();
                 final var marriage = ctx.getMarriage(userData);
+                final var inventory = player.getInventory();
 
-                final var inventory = isSeasonal ? seasonalPlayer.getInventory() : player.getInventory();
-
-                var equipped = isSeasonal ?
-                        seasonalPlayerData.getEquippedItems().of(PlayerEquipment.EquipmentType.PICK) :
-                        userData.getEquippedItems().of(PlayerEquipment.EquipmentType.PICK);
+                var equipped = userData.getEquippedItems().of(PlayerEquipment.EquipmentType.PICK);
 
                 if (equipped == 0) {
                     ctx.sendLocalized("commands.mine.not_equipped", EmoteReference.ERROR);
@@ -276,14 +269,8 @@ public class CurrencyActionCmds {
                     playerData.markCampaignAsSeen();
                 }
 
-                if (isSeasonal) {
-                    seasonalPlayer.addMoney(money);
-                    seasonalPlayer.saveUpdating();
-                } else {
-                    playerData.incrementMiningExperience(random);
-                    player.addMoney(money);
-                }
-
+                playerData.incrementMiningExperience(random);
+                player.addMoney(money);
                 handlePetBadges(player, marriage, pet);
                 player.saveUpdating();
 
@@ -291,7 +278,7 @@ public class CurrencyActionCmds {
                     marriage.saveUpdating();
                 }
 
-                ItemHelper.handleItemDurability(item, ctx, player, dbUser, seasonalPlayer, "commands.mine.autoequip.success", isSeasonal);
+                ItemHelper.handleItemDurability(item, ctx, player, dbUser, "commands.mine.autoequip.success");
                 message += "\n\n" + (languageContext.get("commands.mine.success") + reminder).formatted(item.getEmojiDisplay(), money, item.getName());
 
                 ctx.send(message);
@@ -328,27 +315,18 @@ public class CurrencyActionCmds {
         cr.register("fish", new SimpleCommand(CommandCategory.CURRENCY) {
             @Override
             protected void call(Context ctx, String content, String[] args) {
-                final var isSeasonal = ctx.isSeasonal();
                 final var languageContext = ctx.getLanguageContext();
 
                 final var player = ctx.getPlayer();
                 final var playerData = player.getData();
-
-                final var seasonPlayer = ctx.getSeasonPlayer();
                 final var dbUser = ctx.getDBUser();
                 final var userData = dbUser.getData();
                 final var marriage = ctx.getMarriage(userData);
-
-                final var playerInventory = isSeasonal ? seasonPlayer.getInventory() : player.getInventory();
+                final var playerInventory = player.getInventory();
 
                 FishRod item;
 
-                var equipped = isSeasonal ?
-                        //seasonal equipped
-                        seasonPlayer.getData().getEquippedItems().of(PlayerEquipment.EquipmentType.ROD) :
-                        //not seasonal
-                        userData.getEquippedItems().of(PlayerEquipment.EquipmentType.ROD);
-
+                var equipped = userData.getEquippedItems().of(PlayerEquipment.EquipmentType.ROD);
                 if (equipped == 0) {
                     ctx.sendLocalized("commands.fish.no_rod_equipped", EmoteReference.ERROR);
                     return;
@@ -381,7 +359,7 @@ public class CurrencyActionCmds {
                     ctx.sendLocalized("commands.fish.dust", EmoteReference.TALKING, level);
                     dbUser.saveUpdating();
 
-                    ItemHelper.handleItemDurability(item, ctx, player, dbUser, seasonPlayer, "commands.fish.autoequip.success", isSeasonal);
+                    ItemHelper.handleItemDurability(item, ctx, player, dbUser, "commands.fish.autoequip.success");
                     return;
                 } else if (chance < 20) {
                     //Here you found trash.
@@ -393,7 +371,7 @@ public class CurrencyActionCmds {
                     if (playerInventory.getAmount(selected) >= 5000) {
                         ctx.sendLocalized("commands.fish.trash.overflow", EmoteReference.SAD);
 
-                        ItemHelper.handleItemDurability(item, ctx, player, dbUser, seasonPlayer, "commands.fish.autoequip.success", isSeasonal);
+                        ItemHelper.handleItemDurability(item, ctx, player, dbUser, "commands.fish.autoequip.success");
                         return;
                     }
 
@@ -504,12 +482,8 @@ public class CurrencyActionCmds {
                     List<ItemStack> reducedList = ItemStack.reduce(list);
                     playerInventory.process(reducedList);
 
-                    if (isSeasonal) {
-                        seasonPlayer.addMoney(money);
-                    } else {
-                        player.addMoney(money);
-                        player.getData().incrementFishingExperience(random);
-                    }
+                    player.addMoney(money);
+                    player.getData().incrementFishingExperience(random);
 
                     var itemDisplay = ItemStack.toString(reducedList);
                     var foundFish = !reducedList.isEmpty();
@@ -550,9 +524,7 @@ public class CurrencyActionCmds {
                         ctx.sendLocalized("commands.fish.dust", EmoteReference.TALKING, level);
                         dbUser.saveUpdating();
 
-                        ItemHelper.handleItemDurability(item, ctx, player, dbUser, seasonPlayer,
-                                "commands.fish.autoequip.success", isSeasonal
-                        );
+                        ItemHelper.handleItemDurability(item, ctx, player, dbUser, "commands.fish.autoequip.success");
                         return;
                     }
 
@@ -572,16 +544,12 @@ public class CurrencyActionCmds {
                 //Save all changes to the player object.
                 player.saveUpdating();
 
-                if (isSeasonal) {
-                    seasonPlayer.saveUpdating();
-                }
-
                 // Save pet stats.
                 if (marriage != null) {
                     marriage.saveUpdating();
                 }
 
-                ItemHelper.handleItemDurability(item, ctx, player, dbUser, seasonPlayer, "commands.fish.autoequip.success", isSeasonal);
+                ItemHelper.handleItemDurability(item, ctx, player, dbUser, "commands.fish.autoequip.success");
             }
 
             @Override
@@ -616,24 +584,17 @@ public class CurrencyActionCmds {
         cr.register("chop", new SimpleCommand(CommandCategory.CURRENCY) {
             @Override
             protected void call(Context ctx, String content, String[] args) {
-                final var isSeasonal = ctx.isSeasonal();
                 final var languageContext = ctx.getLanguageContext();
 
                 final var player = ctx.getPlayer();
                 final var playerData = player.getData();
-
-                final var seasonPlayer = ctx.getSeasonPlayer();
                 final var dbUser = ctx.getDBUser();
                 final var userData = dbUser.getData();
                 final var marriage = ctx.getMarriage(userData);
-                final var playerInventory = isSeasonal ? seasonPlayer.getInventory() : player.getInventory();
+                final var playerInventory = player.getInventory();
 
                 var extraMessage = "\n";
-                var equipped = isSeasonal ?
-                        //seasonal equipped
-                        seasonPlayer.getData().getEquippedItems().of(PlayerEquipment.EquipmentType.AXE) :
-                        //not seasonal
-                        userData.getEquippedItems().of(PlayerEquipment.EquipmentType.AXE);
+                var equipped = userData.getEquippedItems().of(PlayerEquipment.EquipmentType.AXE);
 
                 if (equipped == 0) {
                     ctx.sendLocalized("commands.chop.not_equipped", EmoteReference.ERROR);
@@ -660,7 +621,7 @@ public class CurrencyActionCmds {
                     int level = userData.increaseDustLevel(random.nextInt(5));
                     dbUser.save();
                     // Process axe durability.
-                    ItemHelper.handleItemDurability(item, ctx, player, dbUser, seasonPlayer, "commands.chop.autoequip.success", isSeasonal);
+                    ItemHelper.handleItemDurability(item, ctx, player, dbUser, "commands.chop.autoequip.success");
 
                     ctx.sendLocalized("commands.chop.dust", EmoteReference.SAD, level);
                 } else {
@@ -734,12 +695,8 @@ public class CurrencyActionCmds {
                     playerInventory.process(reducedStack);
 
                     // Add money
-                    if (isSeasonal) {
-                        seasonPlayer.addMoney(money);
-                    } else {
-                        player.addMoney(money);
-                        player.getData().incrementChopExperience(random);
-                    }
+                    player.addMoney(money);
+                    player.getData().incrementChopExperience(random);
 
                     // Ah yes, sellout
                     var bonus = money;
@@ -775,15 +732,21 @@ public class CurrencyActionCmds {
 
                     // Show a message depending on the outcome.
                     if (money > 0 && !found) {
-                        ctx.sendFormat(languageContext.get("commands.chop.success_money_noitem") + extraMessage, item.getEmojiDisplay(), money, item.getName());
+                        ctx.sendFormat(languageContext.get("commands.chop.success_money_noitem") + extraMessage,
+                                item.getEmojiDisplay(), money, item.getName()
+                        );
                     } else if (found && money == 0) {
-                        ctx.sendFormat(languageContext.get("commands.chop.success_only_item") + extraMessage, item.getEmojiDisplay(), itemDisplay, item.getName());
+                        ctx.sendFormat(languageContext.get("commands.chop.success_only_item") + extraMessage,
+                                item.getEmojiDisplay(), itemDisplay, item.getName()
+                        );
                     } else if (!found && money == 0) {
                         // This doesn't actually increase the dust level, though.
                         var level = userData.getDustLevel();
                         ctx.sendLocalized("commands.chop.dust", EmoteReference.SAD, level);
                     } else {
-                        ctx.sendFormat(languageContext.get("commands.chop.success") + extraMessage, item.getEmojiDisplay(), itemDisplay, money, item.getName());
+                        ctx.sendFormat(languageContext.get("commands.chop.success") + extraMessage,
+                                item.getEmojiDisplay(), itemDisplay, money, item.getName()
+                        );
                     }
 
                     player.save();
@@ -794,7 +757,7 @@ public class CurrencyActionCmds {
                     }
 
                     // Process axe durability.
-                    ItemHelper.handleItemDurability(item, ctx, player, dbUser, seasonPlayer, "commands.chop.autoequip.success", isSeasonal);
+                    ItemHelper.handleItemDurability(item, ctx, player, dbUser, "commands.chop.autoequip.success");
                 }
             }
 

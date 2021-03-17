@@ -58,7 +58,7 @@ public class CurrencyCmds {
             public void call(Context ctx, String content, String[] args) {
                 var arguments = ctx.getOptionalArguments();
                 content = Utils.replaceArguments(arguments, content,
-                        "brief", "calculate", "calc", "c", "info", "full", "season", "s");
+                        "brief", "calculate", "calc", "c", "info", "full");
 
                 // Lambda memes lol
                 var finalContent = content;
@@ -76,13 +76,8 @@ public class CurrencyCmds {
                     final var player = ctx.getPlayer(member);
                     final var playerData = player.getData();
                     final var user = ctx.getDBUser(member);
-                    final var seasonPlayer = ctx.getSeasonPlayer(member);
                     final var languageContext = ctx.getLanguageContext();
                     var playerInventory = player.getInventory();
-
-                    if (ctx.isSeasonal()) {
-                        playerInventory = seasonPlayer.getInventory();
-                    }
 
                     final var inventoryList = playerInventory.asList();
 
@@ -230,13 +225,7 @@ public class CurrencyCmds {
         registry.register("opencrate", new SimpleCommand(CommandCategory.CURRENCY) {
             @Override
             protected void call(Context ctx, String content, String[] args) {
-                var arguments = ctx.getOptionalArguments();
-                content = Utils.replaceArguments(arguments, content, "season", "s").trim();
-
-                var isSeasonal = ctx.isSeasonal();
-
                 var player = ctx.getPlayer();
-                var seasonPlayer = ctx.getSeasonPlayer();
                 var item = ItemHelper.fromAnyNoId(content.replace("\"", ""), ctx.getLanguageContext())
                         .orElse(null);
 
@@ -255,10 +244,7 @@ public class CurrencyCmds {
                     return;
                 }
 
-                var containsItem = isSeasonal ?
-                        seasonPlayer.getInventory().containsItem(item) :
-                        player.getInventory().containsItem(item);
-
+                var containsItem = player.getInventory().containsItem(item);
                 if (!containsItem) {
                     ctx.sendLocalized("commands.opencrate.no_crate", EmoteReference.SAD, item.getName());
                     return;
@@ -266,7 +252,7 @@ public class CurrencyCmds {
 
                 //Ratelimit handled here
                 //Check ItemHelper.openLootCrate for implementation details.
-                item.getAction().test(ctx, isSeasonal);
+                item.getAction().test(ctx);
             }
 
             @Override
@@ -391,7 +377,6 @@ public class CurrencyCmds {
 
                         if (item.getItemType() != ItemType.INTERACTIVE && item.getItemType() != ItemType.CRATE &&
                                 item.getItemType() != ItemType.POTION && item.getItemType() != ItemType.BUFF) {
-
                             ctx.sendLocalized("commands.useitem.not_interactive", EmoteReference.ERROR);
                             return;
                         }
@@ -570,6 +555,6 @@ public class CurrencyCmds {
             return;
         }
 
-        item.getAction().test(ctx, false);
+        item.getAction().test(ctx);
     }
 }

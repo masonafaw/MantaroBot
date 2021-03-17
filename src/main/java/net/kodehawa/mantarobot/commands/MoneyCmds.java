@@ -22,7 +22,6 @@ import net.kodehawa.mantarobot.commands.currency.TextChannelGround;
 import net.kodehawa.mantarobot.commands.currency.item.ItemReference;
 import net.kodehawa.mantarobot.commands.currency.item.ItemStack;
 import net.kodehawa.mantarobot.commands.currency.profile.Badge;
-import net.kodehawa.mantarobot.commands.currency.seasons.helpers.UnifiedPlayer;
 import net.kodehawa.mantarobot.core.CommandRegistry;
 import net.kodehawa.mantarobot.core.modules.Module;
 import net.kodehawa.mantarobot.core.modules.commands.SimpleCommand;
@@ -30,6 +29,7 @@ import net.kodehawa.mantarobot.core.modules.commands.base.CommandCategory;
 import net.kodehawa.mantarobot.core.modules.commands.base.Context;
 import net.kodehawa.mantarobot.core.modules.commands.help.HelpContent;
 import net.kodehawa.mantarobot.data.MantaroData;
+import net.kodehawa.mantarobot.db.entities.Player;
 import net.kodehawa.mantarobot.utils.Utils;
 import net.kodehawa.mantarobot.utils.commands.CustomFinderUtil;
 import net.kodehawa.mantarobot.utils.commands.EmoteReference;
@@ -93,7 +93,7 @@ public class MoneyCmds {
                     return;
                 }
 
-                UnifiedPlayer toAddMoneyTo = UnifiedPlayer.of(author, ctx.getConfig().getCurrentSeason());
+                Player toAddMoneyTo = ctx.getPlayer();
                 User otherUser = null;
 
                 boolean targetOther = !mentionedUsers.isEmpty();
@@ -139,12 +139,10 @@ public class MoneyCmds {
                         dailyMoney +=Math.max(5, r.nextInt(100));
                     }
 
-                    toAddMoneyTo = UnifiedPlayer.of(otherUser, ctx.getConfig().getCurrentSeason());
-
-
+                    toAddMoneyTo = ctx.getPlayer(otherUser);
                 } else{
                     // This is here so you dont overwrite yourself....
-                    authorPlayer = toAddMoneyTo.getPlayer();
+                    authorPlayer = toAddMoneyTo;
                     authorPlayerData = authorPlayer.getData();
                 }
 
@@ -325,9 +323,7 @@ public class MoneyCmds {
         cr.register("loot", new SimpleCommand(CommandCategory.CURRENCY) {
             @Override
             public void call(Context ctx, String content, String[] args) {
-                var unifiedPlayer = UnifiedPlayer.of(ctx.getAuthor(), ctx.getConfig().getCurrentSeason());
-
-                var player = unifiedPlayer.getPlayer();
+                var player = ctx.getPlayer();
                 var playerData = player.getData();
                 var dbUser = ctx.getDBUser();
                 var languageContext = ctx.getLanguageContext();
@@ -387,7 +383,7 @@ public class MoneyCmds {
                         extraMessage += languageContext.withRoot("commands", "loot.item_overflow");
 
                     if (moneyFound != 0) {
-                        if (unifiedPlayer.addMoney(moneyFound)) {
+                        if (player.addMoney(moneyFound)) {
                             ctx.sendLocalized("commands.loot.with_item.found", EmoteReference.POPPER, stack, moneyFound, extraMessage);
                         } else {
                             ctx.sendLocalized("commands.loot.with_item.found_but_overflow", EmoteReference.POPPER, stack, moneyFound, extraMessage);
@@ -398,7 +394,7 @@ public class MoneyCmds {
 
                 } else {
                     if (moneyFound != 0) {
-                        if (unifiedPlayer.addMoney(moneyFound)) {
+                        if (player.addMoney(moneyFound)) {
                             ctx.sendLocalized("commands.loot.without_item.found", EmoteReference.POPPER, moneyFound, extraMessage);
                         } else {
                             ctx.sendLocalized("commands.loot.without_item.found_but_overflow", EmoteReference.POPPER, moneyFound);
@@ -417,7 +413,7 @@ public class MoneyCmds {
                     }
                 }
 
-                unifiedPlayer.saveUpdating();
+                player.saveUpdating();
             }
 
             @Override
@@ -435,9 +431,6 @@ public class MoneyCmds {
         cr.register("balance", new SimpleCommand(CommandCategory.CURRENCY) {
             @Override
             protected void call(Context ctx, String content, String[] args) {
-                var optionalArguments = ctx.getOptionalArguments();
-                content = Utils.replaceArguments(optionalArguments, content, "season", "s").trim();
-                var isSeasonal = optionalArguments.containsKey("season") || optionalArguments.containsKey("s");
                 var languageContext = ctx.getLanguageContext();
 
                 // Values on lambdas should be final or effectively final part 9999.
@@ -462,7 +455,7 @@ public class MoneyCmds {
                     var player = ctx.getPlayer(user);
                     var playerData = player.getData();
 
-                    var balance = isSeasonal ? ctx.getSeasonPlayer(user).getMoney() : player.getCurrentMoney();
+                    var balance = player.getCurrentMoney();
                     var extra = "";
 
                     if (!playerData.isResetWarning() && !ctx.getConfig().isPremiumBot() && ctx.getPlayer().getOldMoney() > 10_000) {

@@ -31,7 +31,6 @@ import net.kodehawa.mantarobot.commands.currency.item.special.helpers.Breakable;
 import net.kodehawa.mantarobot.commands.currency.profile.Badge;
 import net.kodehawa.mantarobot.commands.currency.profile.ProfileComponent;
 import net.kodehawa.mantarobot.commands.currency.profile.inventory.InventorySortType;
-import net.kodehawa.mantarobot.commands.currency.seasons.SeasonPlayer;
 import net.kodehawa.mantarobot.core.CommandRegistry;
 import net.kodehawa.mantarobot.core.modules.Module;
 import net.kodehawa.mantarobot.core.modules.commands.SubCommand;
@@ -49,10 +48,13 @@ import net.kodehawa.mantarobot.utils.commands.EmoteReference;
 import net.kodehawa.mantarobot.utils.commands.ratelimit.IncreasingRateLimiter;
 import net.kodehawa.mantarobot.utils.commands.ratelimit.RatelimitUtils;
 
-import java.awt.Color;
+import java.awt.*;
 import java.time.DateTimeException;
 import java.time.LocalDateTime;
-import java.util.*;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -103,18 +105,12 @@ public class ProfileCmd {
                 return new SubCommand() {
                     @Override
                     protected void call(Context ctx, I18nContext languageContext, String content) {
-                        var optionalArguments = ctx.getOptionalArguments();
-                        content = Utils.replaceArguments(optionalArguments, content, "season", "s").trim();
-                        var isSeasonal = ctx.isSeasonal();
-                        var finalContent = content;
-
                         ctx.findMember(content, members -> {
-                            SeasonPlayer seasonalPlayer = null;
                             var userLooked = ctx.getAuthor();
                             var memberLooked = ctx.getMember();
 
-                            if (!finalContent.isEmpty()) {
-                                var found = CustomFinderUtil.findMember(finalContent, members, ctx);
+                            if (!content.isEmpty()) {
+                                var found = CustomFinderUtil.findMember(content, members, ctx);
                                 if (found == null) {
                                     return;
                                 }
@@ -179,13 +175,9 @@ public class ProfileCmd {
                             var badges = playerData.getBadges();
                             Collections.sort(badges);
 
-                            if (isSeasonal) {
-                                seasonalPlayer = ctx.getSeasonPlayer(userLooked);
-                            }
-
                             var marriage = ctx.getMarriage(userData);
                             var ringHolder = player.getInventory().containsItem(ItemReference.RING) && marriage != null;
-                            var holder = new ProfileComponent.Holder(userLooked, player, seasonalPlayer, dbUser, marriage, badges);
+                            var holder = new ProfileComponent.Holder(userLooked, player, dbUser, marriage, badges);
                             var profileBuilder = new EmbedBuilder();
                             var description = languageContext.get("commands.profile.no_desc");
 
@@ -645,10 +637,7 @@ public class ProfileCmd {
                     var data = dbUser.getData();
                     var playerData = player.getData();
                     var playerStats = ctx.db().getPlayerStats(toLookup);
-                    var seasonPlayer = ctx.getSeasonPlayer(toLookup);
-
                     var equippedItems = data.getEquippedItems();
-                    var seasonalEquippedItems = seasonPlayer.getData().getEquippedItems();
 
                     var potion = (Potion) equippedItems.getEffectItem(PlayerEquipment.EquipmentType.POTION);
                     var buff = (Potion) equippedItems.getEffectItem(PlayerEquipment.EquipmentType.BUFF);
@@ -687,7 +676,6 @@ public class ProfileCmd {
                     var noBuff = buff == null || !isBuffActive;
 
                     var equipment = parsePlayerEquipment(equippedItems, ctx.getLanguageContext());
-                    var seasonalEquipment = parsePlayerEquipment(seasonalEquippedItems, ctx.getLanguageContext());
 
                     //This whole thing is a massive mess, lmfao.
                     //This is definitely painful and goes on for 100 lines lol
@@ -718,10 +706,6 @@ public class ProfileCmd {
 
                             prettyDisplayLine(languageContext.get("commands.profile.stats.equipment"),
                                     equipment
-                            ),
-
-                            prettyDisplayLine(languageContext.get("commands.profile.stats.seasonal_equipment"),
-                                    seasonalEquipment
                             ),
 
                             prettyDisplay(languageContext.get("commands.profile.stats.autoequip"),

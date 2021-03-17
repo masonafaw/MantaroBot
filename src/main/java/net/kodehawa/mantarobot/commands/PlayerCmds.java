@@ -27,7 +27,6 @@ import net.kodehawa.mantarobot.commands.currency.item.ItemStack;
 import net.kodehawa.mantarobot.commands.currency.item.PlayerEquipment;
 import net.kodehawa.mantarobot.commands.currency.item.special.helpers.Breakable;
 import net.kodehawa.mantarobot.commands.currency.profile.Badge;
-import net.kodehawa.mantarobot.commands.currency.seasons.helpers.UnifiedPlayer;
 import net.kodehawa.mantarobot.core.CommandRegistry;
 import net.kodehawa.mantarobot.core.listeners.operations.InteractiveOperations;
 import net.kodehawa.mantarobot.core.listeners.operations.core.InteractiveOperation;
@@ -52,7 +51,7 @@ import net.kodehawa.mantarobot.utils.commands.EmoteReference;
 import net.kodehawa.mantarobot.utils.commands.ratelimit.IncreasingRateLimiter;
 import net.kodehawa.mantarobot.utils.commands.ratelimit.RatelimitUtils;
 
-import java.awt.Color;
+import java.awt.*;
 import java.time.OffsetDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.Collections;
@@ -149,7 +148,7 @@ public class PlayerCmds {
                         return;
                     }
 
-                    var player = UnifiedPlayer.of(usr, ctx.getConfig().getCurrentSeason());
+                    var player = ctx.getPlayer(usr);
                     player.addReputation(1L);
                     player.saveUpdating();
 
@@ -181,18 +180,12 @@ public class PlayerCmds {
                     return;
                 }
 
-                var isSeasonal = ctx.isSeasonal();
-                content = Utils.replaceArguments(ctx.getOptionalArguments(), content, "s", "season");
-
                 var item = ItemHelper.fromAnyNoId(content.replace("\"", ""), ctx.getLanguageContext())
                         .orElse(null);
 
                 var player = ctx.getPlayer();
                 var dbUser = ctx.getDBUser();
                 var userData = dbUser.getData();
-                var seasonalPlayer = ctx.getSeasonPlayer();
-                var seasonalPlayerData = seasonalPlayer.getData();
-                var seasonalPlayerInventory = seasonalPlayer.getInventory();
                 var playerInventory = player.getInventory();
 
                 if (item == null) {
@@ -200,13 +193,13 @@ public class PlayerCmds {
                     return;
                 }
 
-                var containsItem = isSeasonal ? seasonalPlayerInventory.containsItem(item) : playerInventory.containsItem(item);
+                var containsItem = playerInventory.containsItem(item);
                 if (!containsItem) {
                     ctx.sendLocalized("commands.profile.equip.not_owned", EmoteReference.ERROR);
                     return;
                 }
 
-                var equipment = isSeasonal ? seasonalPlayerData.getEquippedItems() : userData.getEquippedItems();
+                var equipment = userData.getEquippedItems();
 
                 var proposedType = equipment.getTypeFor(item);
                 if (equipment.getEquipment().containsKey(proposedType)) {
@@ -215,20 +208,15 @@ public class PlayerCmds {
                 }
 
                 if (equipment.equipItem(item)) {
-                    if (isSeasonal) {
-                        seasonalPlayerInventory.process(new ItemStack(item, -1));
-                        seasonalPlayer.save();
-                    } else {
-                        if (item == ItemReference.HELLFIRE_PICK)
-                            player.getData().addBadgeIfAbsent(Badge.HOT_MINER);
-                        if (item == ItemReference.HELLFIRE_ROD)
-                            player.getData().addBadgeIfAbsent(Badge.HOT_FISHER);
-                        if (item == ItemReference.HELLFIRE_AXE)
-                            player.getData().addBadgeIfAbsent(Badge.HOT_CHOPPER);
+                    if (item == ItemReference.HELLFIRE_PICK)
+                        player.getData().addBadgeIfAbsent(Badge.HOT_MINER);
+                    if (item == ItemReference.HELLFIRE_ROD)
+                        player.getData().addBadgeIfAbsent(Badge.HOT_FISHER);
+                    if (item == ItemReference.HELLFIRE_AXE)
+                        player.getData().addBadgeIfAbsent(Badge.HOT_CHOPPER);
 
-                        playerInventory.process(new ItemStack(item, -1));
-                        player.save();
-                    }
+                    playerInventory.process(new ItemStack(item, -1));
+                    player.save();
 
                     dbUser.saveUpdating();
                     ctx.sendLocalized("commands.profile.equip.success", EmoteReference.CORRECT, item.getEmoji(), item.getName());
@@ -258,12 +246,8 @@ public class PlayerCmds {
                     return;
                 }
 
-                var isSeasonal = ctx.isSeasonal();
-                content = Utils.replaceArguments(ctx.getOptionalArguments(), content, "s", "season");
-
-                var seasonalPlayer = ctx.getSeasonPlayer();
                 var dbUser = ctx.getDBUser();
-                var equipment = isSeasonal ? seasonalPlayer.getData().getEquippedItems() : dbUser.getData().getEquippedItems();
+                var equipment = dbUser.getData().getEquippedItems();
                 var type = PlayerEquipment.EquipmentType.fromString(content);
                 if (type == null) {
                     ctx.sendLocalized("commands.profile.unequip.invalid_type", EmoteReference.ERROR);
@@ -288,13 +272,11 @@ public class PlayerCmds {
 
                     var ct = interactiveEvent.getMessage().getContentRaw();
                     if (ct.equalsIgnoreCase("yes")) {
-                        var seasonalPlayerFinal = ctx.getSeasonPlayer(author);
                         var dbUserFinal = ctx.getDBUser(author);
                         var playerFinal = ctx.getPlayer(author);
                         var dbUserData = dbUserFinal.getData();
-                        var seasonalPlayerData = seasonalPlayerFinal.getData();
 
-                        var equipmentFinal = isSeasonal ? seasonalPlayerData.getEquippedItems() : dbUserData.getEquippedItems();
+                        var equipmentFinal = dbUserData.getEquippedItems();
                         var equippedFinal = equipmentFinal.getEquipment().get(type);
                         if (equippedFinal == null) {
                             ctx.sendLocalized("commands.profile.unequip.not_equipped", EmoteReference.ERROR);
@@ -331,12 +313,7 @@ public class PlayerCmds {
                         }
 
                         equipmentFinal.resetOfType(type);
-                        if (isSeasonal) {
-                            seasonalPlayerFinal.save();
-                        } else {
-                            dbUserFinal.save();
-                        }
-
+                        dbUserFinal.save();
                         playerFinal.save();
 
                         ctx.sendFormat(languageContext.get("commands.profile.unequip.success") + part,

@@ -44,7 +44,7 @@ Make sure you pay close attention to the [license](https://github.com/Mantaro/Ma
 4.  Run `gradlew shadowJar`
 5.  Grab the jar from `build/libs`
 6.  Install `rethinkdb` and `redis`
-7.  On rethinkdb, create the `mantaro` database with the following tables: `mantaro, players, marriages, playerstats, users, guilds, keys, commands, seasonalplayers`
+7.  On rethinkdb, create the `mantaro` database with the following tables: `mantaro, players, marriages, playerstats, users, guilds, keys, commands`
 8.  Run it, wait a little for the bot to generate a file called `config.json`
 9.  Prepare yourself to start filling in some config values. You don't need to fill all values, though. The token and the user id are necessary to start up, you wanna set the owner IDs aswell to be able to use owner commands. Values you *need* to fill: `token clientId`, values you *need* to change: `"bucketFactor" : 1 "isSelfHost" : true`.
 9.  In config.json, you might want set the value needApi to false, or clone and run [the API](https://github.com/Kodehawa/mantaro-api))

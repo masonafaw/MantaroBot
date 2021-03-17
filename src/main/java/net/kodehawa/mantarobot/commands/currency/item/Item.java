@@ -20,7 +20,7 @@ import net.kodehawa.mantarobot.core.modules.commands.base.Context;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.function.BiPredicate;
+import java.util.function.Predicate;
 
 public class Item {
     private static final Logger log = LoggerFactory.getLogger(Item.class);
@@ -36,7 +36,7 @@ public class Item {
     private final String recipe;
     private final int[] recipeTypes;
     private final long price;
-    private BiPredicate<Context, Boolean> action;
+    private Predicate<Context> action;
     private final ItemType itemType;
     private final String translatedName;
     private final String alias;
@@ -44,7 +44,7 @@ public class Item {
 
     public Item(ItemType type, String emoji, String name, String alias, String translatedName,
                 String desc, long value, boolean sellable, boolean buyable, boolean hidden, long maxSize,
-                BiPredicate<Context, Boolean> action,
+                Predicate<Context> action,
                 String recipe, boolean petOnly, int... recipeTypes) {
         this.emoji = emoji;
         this.name = name;
@@ -149,7 +149,7 @@ public class Item {
     }
 
     public Item(ItemType type, String emoji, String name, String translatedName,
-                String desc, long value, boolean sellable, boolean buyable, BiPredicate<Context, Boolean> action) {
+                String desc, long value, boolean sellable, boolean buyable, Predicate<Context> action) {
         this(type, emoji, name, null,
                 translatedName, desc, value,
                 sellable, buyable, false,
@@ -158,7 +158,7 @@ public class Item {
     }
 
     public Item(ItemType type, String emoji, String name, String translatedName,
-                String desc, long value, boolean buyable, BiPredicate<Context, Boolean> action) {
+                String desc, long value, boolean buyable, Predicate<Context> action) {
         this(type, emoji, name, null,
                 translatedName, desc, value,
                 true, buyable, false,
@@ -168,7 +168,7 @@ public class Item {
 
     public Item(ItemType type, String emoji, String name, String translatedName,
                 String desc, long value, boolean sellable, boolean buyable, boolean hidden,
-                BiPredicate<Context, Boolean> action) {
+                Predicate<Context> action) {
         this(type, emoji, name, null,
                 translatedName, desc, value,
                 sellable, buyable, hidden,
@@ -273,11 +273,11 @@ public class Item {
         return this.recipeTypes;
     }
 
-    public BiPredicate<Context, Boolean> getAction() {
+    public Predicate<Context> getAction() {
         return this.action;
     }
 
-    public void setAction(BiPredicate<Context, Boolean> action) {
+    public void setAction(Predicate<Context> action) {
         this.action = action;
     }
 

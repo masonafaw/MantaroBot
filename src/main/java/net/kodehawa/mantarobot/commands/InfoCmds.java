@@ -27,7 +27,6 @@ import net.kodehawa.mantarobot.core.modules.commands.SimpleCommand;
 import net.kodehawa.mantarobot.core.modules.commands.base.CommandCategory;
 import net.kodehawa.mantarobot.core.modules.commands.base.Context;
 import net.kodehawa.mantarobot.core.modules.commands.help.HelpContent;
-import net.kodehawa.mantarobot.core.modules.commands.i18n.I18nContext;
 import net.kodehawa.mantarobot.data.I18n;
 import net.kodehawa.mantarobot.utils.StringUtils;
 import net.kodehawa.mantarobot.utils.Utils;
@@ -35,7 +34,7 @@ import net.kodehawa.mantarobot.utils.commands.CustomFinderUtil;
 import net.kodehawa.mantarobot.utils.commands.EmoteReference;
 import net.kodehawa.mantarobot.utils.commands.FinderUtils;
 
-import java.awt.Color;
+import java.awt.*;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -336,29 +335,6 @@ public class InfoCmds {
                         .setUsage("`~>userinfo <@user>` - Get information about an user.")
                         .addParameter("user", "The user you want to look for. " +
                                 "Mentions, nickname and user#discriminator work.")
-                        .build();
-            }
-        });
-    }
-
-    @Subscribe
-    public void season(CommandRegistry registry) {
-        registry.register("season", new SimpleCommand(CommandCategory.INFO) {
-            @Override
-            protected void call(Context ctx, String content, String[] args) {
-                I18nContext languageContext = ctx.getLanguageContext();
-
-                ctx.sendFormat(languageContext.get("commands.season.info") +
-                                languageContext.get("commands.season.info_2"),
-                        ctx.getConfig().getCurrentSeason().getDisplay(), ctx.db().getAmountSeasonalPlayers()
-                );
-            }
-
-
-            @Override
-            public HelpContent help() {
-                return new HelpContent.Builder()
-                        .setDescription("Shows information about this season and about what's a season.")
                         .build();
             }
         });

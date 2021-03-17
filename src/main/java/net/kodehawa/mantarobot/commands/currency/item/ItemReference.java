@@ -210,7 +210,7 @@ public class ItemReference {
             LOOT_CRATE = new Item(ItemType.CRATE, EmoteReference.LOOT_CRATE.getDiscordNotation(),
                     "Loot Crate", "items.crate", "items.description.crate",
                     0, false, false, true,
-                    (ctx, season) -> ItemHelper.openLootCrate(ctx, ItemType.LootboxType.RARE, 33, EmoteReference.LOOT_CRATE, 3, season)
+                    ctx -> ItemHelper.openLootCrate(ctx, ItemType.LootboxType.RARE, 33, EmoteReference.LOOT_CRATE, 3)
             ),
 
             STAR_2 = new Item(ItemType.COLLECTABLE, EmoteReference.STAR.getUnicode(), "Consolation Prize",
@@ -394,32 +394,28 @@ public class ItemReference {
             MINE_CRATE = new Item(ItemType.CRATE, EmoteReference.MINE_CRATE.getDiscordNotation(),
                     "Gem Crate", "items.mine_crate", "items.description.mine_crate",
                     0, false, false, true,
-                    (ctx, season) ->
-                            ItemHelper.openLootCrate(ctx, ItemType.LootboxType.MINE, 66, EmoteReference.MINE_CRATE, 3, season)
+                    ctx -> ItemHelper.openLootCrate(ctx, ItemType.LootboxType.MINE, 66, EmoteReference.MINE_CRATE, 3)
             ),
 
             FISH_CRATE = new Item(ItemType.CRATE, EmoteReference.FISH_CRATE.getDiscordNotation(),
                     "Fish Treasure", "items.fish_crate", "items.description.fish_crate",
                     0,
                     false, false, true,
-                    (ctx, season) ->
-                            ItemHelper.openLootCrate(ctx, ItemType.LootboxType.FISH, 67, EmoteReference.FISH_CRATE, 3, season)
+                    ctx -> ItemHelper.openLootCrate(ctx, ItemType.LootboxType.FISH, 67, EmoteReference.FISH_CRATE, 3)
             ),
 
             FISH_PREMIUM_CRATE = new Item(ItemType.CRATE, EmoteReference.PREMIUM_FISH_CRATE.getDiscordNotation(),
                     "Fish Premium Treasure", "items.fish_premium_crate", "items.description.fish_premium_crate",
                     0,
                     false, false, true,
-                    (ctx, season) ->
-                            ItemHelper.openLootCrate(ctx, ItemType.LootboxType.FISH_PREMIUM, 68, EmoteReference.PREMIUM_FISH_CRATE, 5, season)
+                    ctx -> ItemHelper.openLootCrate(ctx, ItemType.LootboxType.FISH_PREMIUM, 68, EmoteReference.PREMIUM_FISH_CRATE, 5)
             ),
 
             MINE_PREMIUM_CRATE = new Item(ItemType.CRATE, EmoteReference.PREMIUM_MINE_CRATE.getDiscordNotation(),
                     "Gem Premium Crate", "items.mine_premium_crate", "items.description.mine_premium_crate",
                     0,
                     false, false, true,
-                    (ctx, season) ->
-                            ItemHelper.openLootCrate(ctx, ItemType.LootboxType.MINE_PREMIUM, 69, EmoteReference.PREMIUM_MINE_CRATE, 5, season)
+                    ctx -> ItemHelper.openLootCrate(ctx, ItemType.LootboxType.MINE_PREMIUM, 69, EmoteReference.PREMIUM_MINE_CRATE, 5)
             ),
 
             COMET_ROD = new FishRod(ItemType.FISHROD, 6,
@@ -747,15 +743,13 @@ public class ItemReference {
             CHOP_CRATE = new Item(ItemType.CRATE, EmoteReference.CHOP_CRATE.getDiscordNotation(),
                     "Chop Crate", "items.chop_crate", "items.description.chop_crate",
                     0, false, false, true,
-                    (ctx, season) ->
-                            ItemHelper.openLootCrate(ctx, ItemType.LootboxType.CHOP, 126, EmoteReference.CHOP_CRATE, 3, season)
+                    ctx -> ItemHelper.openLootCrate(ctx, ItemType.LootboxType.CHOP, 126, EmoteReference.CHOP_CRATE, 3)
             ),
 
             CHOP_PREMIUM_CRATE = new Item(ItemType.CRATE, EmoteReference.PREMIUM_CHOP_CRATE.getDiscordNotation(),
                     "Chop Premium Crate", "items.chop_premium_crate", "items.description.chop_premium_crate",
                     0, false, false, true,
-                    (ctx, season) ->
-                            ItemHelper.openLootCrate(ctx, ItemType.LootboxType.CHOP_PREMIUM, 127, EmoteReference.PREMIUM_CHOP_CRATE, 5, season)
+                    ctx -> ItemHelper.openLootCrate(ctx, ItemType.LootboxType.CHOP_PREMIUM, 127, EmoteReference.PREMIUM_CHOP_CRATE, 5)
             )
     };
 }

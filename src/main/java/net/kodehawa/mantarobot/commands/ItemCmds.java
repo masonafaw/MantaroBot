@@ -38,7 +38,6 @@ import net.kodehawa.mantarobot.core.modules.commands.base.Context;
 import net.kodehawa.mantarobot.core.modules.commands.help.HelpContent;
 import net.kodehawa.mantarobot.core.modules.commands.i18n.I18nContext;
 import net.kodehawa.mantarobot.data.MantaroData;
-import net.kodehawa.mantarobot.db.entities.PlayerStats;
 import net.kodehawa.mantarobot.utils.StringUtils;
 import net.kodehawa.mantarobot.utils.Utils;
 import net.kodehawa.mantarobot.utils.commands.DiscordUtils;
@@ -82,11 +81,10 @@ public class ItemCmds {
 
                         //Argument parsing.
                         var optionalArguments = ctx.getOptionalArguments();
-                        var isSeasonal = optionalArguments.containsKey("season") || optionalArguments.containsKey("s");
                         var amountSpecified = 1;
 
                         // Replace all arguments given on "-argument" sorta stuff.
-                        content = Utils.replaceArguments(optionalArguments, content, "amount", "season", "s")
+                        content = Utils.replaceArguments(optionalArguments, content, "amount")
                                 .replaceAll("\"", "") // This is because it needed quotes before. Not anymore.
                                 .trim();
 
@@ -110,7 +108,6 @@ public class ItemCmds {
                         }
 
                         // Get the necessary entities.
-                        var seasonalPlayer = ctx.getSeasonPlayer();
                         var player = ctx.getPlayer();
                         var playerData = player.getData();
                         var user = ctx.getDBUser();
@@ -162,7 +159,7 @@ public class ItemCmds {
                         // How many parenthesis again?
                         var castCost = (long) (((castItem.getValue() / 2) * amountSpecified) * wrenchItem.getMultiplierReduction());
 
-                        var money = isSeasonal ? seasonalPlayer.getMoney() : player.getCurrentMoney();
+                        var money = player.getCurrentMoney();
                         var isItemCastable = castItem instanceof Castable;
                         var wrenchLevelRequired = isItemCastable ? ((Castable) castItem).getCastLevelRequired() : 1;
 
@@ -185,7 +182,7 @@ public class ItemCmds {
                             return;
                         }
 
-                        var playerInventory = isSeasonal ? seasonalPlayer.getInventory() : player.getInventory();
+                        var playerInventory = player.getInventory();
                         var dust = userData.getDustLevel();
                         if (dust > 95) {
                             ctx.sendLocalized("commands.cast.dust", EmoteReference.ERROR, dust);
@@ -247,19 +244,14 @@ public class ItemCmds {
                         userData.increaseDustLevel(3);
                         user.save();
 
-                        if (isSeasonal) {
-                            seasonalPlayer.removeMoney(castCost);
-                            seasonalPlayer.save();
-                        } else {
-                            player.removeMoney(castCost);
-                            player.save();
-                        }
+                        player.removeMoney(castCost);
+                        player.save();
 
-                        PlayerStats stats = ctx.getPlayerStats();
+                        var stats = ctx.getPlayerStats();
                         stats.incrementCraftedItems(amountSpecified);
                         stats.saveUpdating();
 
-                        ItemHelper.handleItemDurability(wrenchItem, ctx, player, user, seasonalPlayer, "commands.cast.autoequip.success", isSeasonal);
+                        ItemHelper.handleItemDurability(wrenchItem, ctx, player, user, "commands.cast.autoequip.success");
                         ctx.sendFormat(ctx.getLanguageContext().get("commands.cast.success") + "\n" + message,
                                 wrenchItem.getEmojiDisplay(), amountSpecified, "\u2009" + castItem.getEmoji(),
                                 castItem.getName(), castCost, recipeString.toString().trim()
@@ -385,21 +377,13 @@ public class ItemCmds {
                             return;
                         }
 
-                        //Argument parsing.
-                        var optionalArguments = ctx.getOptionalArguments();
-                        var isSeasonal = optionalArguments.containsKey("season") || optionalArguments.containsKey("s");
-                        content = Utils.replaceArguments(optionalArguments, content, "season", "s")
-                                .replaceAll("\"", "")
-                                .trim();
-
                         //Get the necessary entities.
-                        var seasonalPlayer = ctx.getSeasonPlayer();
                         var player = ctx.getPlayer();
                         var user = ctx.getDBUser();
                         var userData = user.getData();
 
                         var item = ItemHelper.fromAnyNoId(content, ctx.getLanguageContext()).orElse(null);
-                        var playerInventory = isSeasonal ? seasonalPlayer.getInventory() : player.getInventory();
+                        var playerInventory = player.getInventory();
                         var wrench = userData.getEquippedItems().of(PlayerEquipment.EquipmentType.WRENCH);
                         if (wrench == 0) {
                             ctx.sendLocalized("commands.cast.not_equipped", EmoteReference.ERROR);
@@ -442,7 +426,7 @@ public class ItemCmds {
                         var repairedItem = ItemHelper.fromId(brokenItem.getMainItem());
                         var repairCost = repairedItem.getValue() / 3;
 
-                        var playerMoney = isSeasonal ? seasonalPlayer.getMoney() : player.getCurrentMoney();
+                        var playerMoney = player.getCurrentMoney();
                         if (playerMoney < repairCost) {
                             ctx.sendLocalized("commands.repair.not_enough_money", EmoteReference.ERROR, playerMoney, repairCost);
                             return;
@@ -488,19 +472,14 @@ public class ItemCmds {
                         user.getData().increaseDustLevel(4);
                         user.save();
 
-                        if (isSeasonal) {
-                            seasonalPlayer.removeMoney(repairCost);
-                            seasonalPlayer.save();
-                        } else {
-                            player.removeMoney(repairCost);
-                            player.save();
-                        }
+                        player.removeMoney(repairCost);
+                        player.save();
 
                         var stats = ctx.getPlayerStats();
                         stats.incrementRepairedItems();
                         stats.saveUpdating();
 
-                        ItemHelper.handleItemDurability(wrenchItem, ctx, player, user, seasonalPlayer, "commands.cast.autoequip.success", isSeasonal);
+                        ItemHelper.handleItemDurability(wrenchItem, ctx, player, user, "commands.cast.autoequip.success");
 
                         ctx.sendFormat(ctx.getLanguageContext().get("commands.repair.success"),
                                 wrenchItem.getEmojiDisplay(), brokenItem.getEmoji(), brokenItem.getName(), repairedItem.getEmoji(),
@@ -612,13 +591,10 @@ public class ItemCmds {
                             return;
                         }
 
-                        final var isSeasonal = ctx.isSeasonal();
-                        //Get the necessary entities.
-                        final var seasonalPlayer = ctx.getSeasonPlayer();
                         final var player = ctx.getPlayer();
                         final var user = ctx.getDBUser();
                         final var userData = user.getData();
-                        final var playerInventory = isSeasonal ? seasonalPlayer.getInventory() : player.getInventory();
+                        final var playerInventory = player.getInventory();
                         content = content.replaceAll("\"", "").trim();
 
                         final var item = ItemHelper.fromAnyNoId(content, ctx.getLanguageContext()).orElse(null);
@@ -664,7 +640,7 @@ public class ItemCmds {
                         }
 
                         var salvageCost = item.getValue() / 3;
-                        var playerMoney = isSeasonal ? seasonalPlayer.getMoney() : player.getCurrentMoney();
+                        var playerMoney = player.getCurrentMoney();
                         if (playerMoney < salvageCost) {
                             ctx.sendLocalized("commands.salvage.not_enough_money", EmoteReference.ERROR, playerMoney, salvageCost);
                             return;
@@ -681,19 +657,14 @@ public class ItemCmds {
                         user.getData().increaseDustLevel(3);
                         user.save();
 
-                        if (isSeasonal) {
-                            seasonalPlayer.removeMoney(salvageCost);
-                            seasonalPlayer.save();
-                        } else {
-                            player.removeMoney(salvageCost);
-                            player.save();
-                        }
+                        player.removeMoney(salvageCost);
+                        player.save();
 
                         var stats = ctx.getPlayerStats();
                         stats.incrementSalvagedItems();
                         stats.saveUpdating();
 
-                        ItemHelper.handleItemDurability(wrenchItem, ctx, player, user, seasonalPlayer, "commands.cast.autoequip.success", isSeasonal);
+                        ItemHelper.handleItemDurability(wrenchItem, ctx, player, user, "commands.cast.autoequip.success");
                         ctx.sendLocalized("commands.salvage.success", wrenchItem.getEmojiDisplay(), item.getName(), toReturn.getName(), salvageCost);
                     }
                 };

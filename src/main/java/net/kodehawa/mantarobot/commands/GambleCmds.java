@@ -20,7 +20,6 @@ import com.google.common.eventbus.Subscribe;
 import net.kodehawa.mantarobot.commands.currency.item.ItemReference;
 import net.kodehawa.mantarobot.commands.currency.item.ItemStack;
 import net.kodehawa.mantarobot.commands.currency.profile.Badge;
-import net.kodehawa.mantarobot.commands.currency.seasons.SeasonPlayer;
 import net.kodehawa.mantarobot.commands.utils.RoundedMetricPrefixFormat;
 import net.kodehawa.mantarobot.core.CommandRegistry;
 import net.kodehawa.mantarobot.core.modules.Module;
@@ -205,19 +204,11 @@ public class GambleCmds {
                 var player = ctx.getPlayer();
                 var stats = ctx.db().getPlayerStats(ctx.getAuthor());
 
-                SeasonPlayer seasonalPlayer = null; //yes
-                var season = false;
-
-                if (opts.containsKey("season")) {
-                    season = true;
-                    seasonalPlayer = ctx.getSeasonPlayer();
-                }
-
                 if (opts.containsKey("useticket")) {
                     coinSelect = true;
                 }
 
-                var playerInventory = season ? seasonalPlayer.getInventory() : player.getInventory();
+                var playerInventory = player.getInventory();
 
                 if (opts.containsKey("amount") && opts.get("amount") != null) {
                     if (!coinSelect) {
@@ -277,7 +268,7 @@ public class GambleCmds {
                     }
                 }
 
-                var playerMoney = season ? seasonalPlayer.getMoney() : player.getCurrentMoney();
+                var playerMoney = player.getCurrentMoney();
 
                 if (playerMoney < money && !coinSelect) {
                     ctx.sendLocalized("commands.slots.errors.not_enough_money", EmoteReference.SAD);
@@ -291,10 +282,7 @@ public class GambleCmds {
                 if (coinSelect) {
                     if (playerInventory.containsItem(ItemReference.SLOT_COIN)) {
                         playerInventory.process(new ItemStack(ItemReference.SLOT_COIN, -coinAmount));
-                        if (season)
-                            seasonalPlayer.save();
-                        else
-                            player.save();
+                        player.save();
 
                         slotsChance = slotsChance + 10;
                         money = 80L;
@@ -303,13 +291,8 @@ public class GambleCmds {
                         return;
                     }
                 } else {
-                    if (season) {
-                        seasonalPlayer.removeMoney(money);
-                        seasonalPlayer.saveAsync();
-                    } else {
-                        player.removeMoney(money);
-                        player.saveUpdating();
-                    }
+                    player.removeMoney(money);
+                    player.saveUpdating();
                 }
 
                 var languageContext = ctx.getLanguageContext();
@@ -365,13 +348,8 @@ public class GambleCmds {
                         player.getData().addBadgeIfAbsent(Badge.SENSELESS_HOARDING);
                     }
 
-                    if (season) {
-                        seasonalPlayer.addMoney(gains + money);
-                        seasonalPlayer.saveUpdating();
-                    } else {
-                        player.addMoney(gains + money);
-                        player.saveUpdating();
-                    }
+                    player.addMoney(gains + money);
+                    player.saveUpdating();
                 } else {
                     stats.getData().incrementSlotsLose();
                     message.append(toSend).append("\n\n").append(
